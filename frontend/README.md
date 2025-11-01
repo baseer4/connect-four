@@ -1,16 +1,86 @@
-# React + Vite
+# Connect Four Game
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time multiplayer Connect Four game built with React, Node.js, Socket.IO, and MongoDB. Players can match with each other or play against a bot.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Real-time multiplayer gameplay
+- Matchmaking system
+- Bot opponent option
+- Leaderboard tracking
+- Username persistence (localStorage)
+- Responsive UI with animations
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js (v16 or higher)
+- npm or yarn
+- MongoDB 
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd connect-four
+```
+
+2. Install backend dependencies:
+```bash
+cd backend
+npm install
+```
+
+3. Install frontend dependencies:
+```bash
+cd ../frontend
+npm install
+```
+
+## Environment Variables
+
+### Backend (.env file in `/backend` directory)
+
+Create a `.env` file in the `backend` directory with the following variables:
+
+```env
+# MongoDB connection string (required)
+MONGO_URI=
+PORT=8000
+NODNODE_ENV=development
+VITE_FRONTEND_URL=http://localhost:5173
+```
+
+### Frontend (.env file in `/frontend` directory)
+
+Create a `.env` file in the `frontend` directory with the following variables:
+
+```env
+# Backend server URL for Socket.IO and API (required)
+VITE_BACKEND_URL=http://localhost:8000
+
+# Backend leaderboard API endpoint (required)
+VITE_BACKEND_LEADERBOARD_URL=http://localhost:8000/api/leaderboard
+```
+
+
+## Running the Application
+
+### Development Mode
+
+
+1. **Start the Backend Server**:
+```bash
+cd backend
+npm run dev
+```
+The backend will start on `http://localhost:8000` (or the PORT you specified).
+
+2. **Start the Frontend Development Server**:
+```bash
+cd frontend
+npm run dev
+```
+The frontend will typically start on `http://localhost:5173` (Vite default port).
+
+3. **Open your browser** and navigate to the frontend URL (e.g., `http://localhost:5173`)
