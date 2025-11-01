@@ -7,8 +7,14 @@ const ROWS = 6;
 const COLS = 7;
 
 export default function Connect4() {
-  const [username, setUsername] = useState('');
-  const [usernameSubmitted, setUsernameSubmitted] = useState(false);
+  const [username, setUsername] = useState(() => {
+    // Load username from localStorage on mount
+    return localStorage.getItem('connect4_username') || '';
+  });
+  const [usernameSubmitted, setUsernameSubmitted] = useState(() => {
+    // Auto-submit if username exists in localStorage
+    return !!localStorage.getItem('connect4_username');
+  });
   const [board, setBoard] = useState(Array(ROWS).fill().map(() => Array(COLS).fill(null)));
   const [roomId, setRoomId] = useState(null);
   const [players, setPlayers] = useState([]);
@@ -16,6 +22,7 @@ export default function Connect4() {
   const [playerIndex, setPlayerIndex] = useState(null);
   const [turn, setTurn] = useState(null);
   const [winner, setWinner] = useState(null);
+  const [winnerColor, setWinnerColor] = useState(null);
   const [waiting, setWaiting] = useState(false);
   const [waitingTime, setWaitingTime] = useState(0);
   const [isBot, setIsBot] = useState(false);
@@ -61,6 +68,7 @@ export default function Connect4() {
         setWaitingTime(0);
         setIsBot(isBot);
         setWinner(null);
+        setWinnerColor(null);
         setBoard(Array(ROWS).fill().map(() => Array(COLS).fill(null)));
       });
 
@@ -80,20 +88,6 @@ export default function Connect4() {
           return newBoard;
         });
         setTurn(nextTurn);
-      });
-
-      socket.on("gameOver", ({ winner: gameWinner, winnerUsername }) => {
-        console.log('Game over:', gameWinner, winnerUsername);
-        
-        if (gameWinner === socket.id) {
-          setWinner("You");
-        } else if (gameWinner === 'BOT') {
-          setWinner("Bot");
-        } else if (gameWinner === 'draw') {
-          setWinner("Draw");
-        } else {
-          setWinner(winnerUsername || "Opponent");
-        }
       });
     }
 
@@ -133,6 +127,33 @@ export default function Connect4() {
         });
         setTurn(nextTurn);
       });
+
+      socket.off("gameOver");
+      socket.on("gameOver", ({ winner: gameWinner, winnerUsername }) => {
+        console.log('Game over:', gameWinner, winnerUsername);
+        
+        // Determine winner color based on which player won
+        let color = null;
+        if (gameWinner && gameWinner !== 'draw') {
+          const winnerIndex = players.indexOf(gameWinner);
+          if (winnerIndex === 0) {
+            color = "R"; // Player 0 = Red
+          } else if (winnerIndex === 1 || gameWinner === 'BOT') {
+            color = "Y"; // Player 1 or BOT = Yellow
+          }
+        }
+        setWinnerColor(color);
+        
+        if (gameWinner === socket.id) {
+          setWinner("You");
+        } else if (gameWinner === 'BOT') {
+          setWinner("Bot");
+        } else if (gameWinner === 'draw') {
+          setWinner("Draw");
+        } else {
+          setWinner(winnerUsername || "Opponent");
+        }
+      });
     }
   }, [players]);
 
@@ -149,6 +170,8 @@ export default function Connect4() {
   const handleUsernameSubmit = (e) => {
     e.preventDefault();
     if (username.trim()) {
+      // Save username to localStorage
+      localStorage.setItem('connect4_username', username.trim());
       setUsernameSubmitted(true);
     }
   };
@@ -167,12 +190,20 @@ export default function Connect4() {
       if (winner === "Draw") return "It's a draw!";
       return `${winner} wins!`;
     }
-    if (!socketRef.current) return "Connecting...";
+    if (!socketRef.current || playerIndex === null) return "Connecting...";
     
     const socket = socketRef.current;
-    if (turn === socket.id) return "Your Turn (Red)";
-    if (turn === 'BOT') return "Bot's Turn (Yellow)";
-    return "Opponent's Turn (Yellow)";
+    // Player 0 = Red, Player 1 = Yellow
+    const myColor = playerIndex === 0 ? "Red" : "Yellow";
+    const opponentColor = playerIndex === 0 ? "Yellow" : "Red";
+    
+    if (turn === socket.id) {
+      return `Your Turn (${myColor})`;
+    }
+    if (turn === 'BOT') {
+      return `Bot's Turn (${opponentColor})`;
+    }
+    return `Opponent's Turn (${opponentColor})`;
   };
 //username prompt
   if (!usernameSubmitted) {
@@ -243,7 +274,7 @@ export default function Connect4() {
             ))
           )}
         </motion.div>
-        <WinnerOverlay winner={winner} />
+        <WinnerOverlay winner={winnerColor} />
       </div>
 
       {winner && (
